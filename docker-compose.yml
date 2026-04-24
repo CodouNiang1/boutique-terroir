@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: terroir_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend FastAPI ────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: terroir_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=boutique_terroir
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # ── Frontend Client ────────────────────────────────────────────────────────
+  frontend-client:
+    build:
+      context: ./frontend-client
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: terroir_client
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # ── Frontend Admin ─────────────────────────────────────────────────────────
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: terroir_admin
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
