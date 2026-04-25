@@ -1,17 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, Dict, Any
-from bson import ObjectId
 
 
 class ProductCreate(BaseModel):
     nom: str
-    categorie: str  # fruits, legumes, fromages, miel, etc.
+    categorie: str
     prix: float
     stock: int
     producteur: str
-    attributs: Optional[Dict[str, Any]] = {}  # Flexible selon le type
+    attributs: Optional[Dict[str, Any]] = {}
 
-    model_config = {"arbitrary_types_allowed": True}
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class ProductUpdate(BaseModel):

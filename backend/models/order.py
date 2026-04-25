@@ -11,11 +11,11 @@ class OrderItem(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    client: str          # nom + prénom combinés
+    client: str
     prenom: str
     telephone: str
     region: str
-    paiement: str        # "wave", "orange_money", "cash"
+    paiement: str
     articles: List[OrderItem]
 
 
