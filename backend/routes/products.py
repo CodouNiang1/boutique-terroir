@@ -40,7 +40,7 @@ async def get_product(product_id: str):
 
 @router.post("/", response_model=ProductResponse, status_code=201)
 async def create_product(product: ProductCreate):
-    doc = product.dict()
+    doc = product.model_dump()
     result = await products_collection.insert_one(doc)
     created = await products_collection.find_one({"_id": result.inserted_id})
     return ProductResponse.from_mongo(created)
@@ -48,7 +48,7 @@ async def create_product(product: ProductCreate):
 
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(product_id: str, update: ProductUpdate):
-    changes = {k: v for k, v in update.dict().items() if v is not None}
+    changes = {k: v for k, v in update.model_dump().items() if v is not None}
     if not changes:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     await products_collection.update_one(

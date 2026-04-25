@@ -10,8 +10,7 @@ class ProductCreate(BaseModel):
     producteur: str
     attributs: Optional[Dict[str, Any]] = {}
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class ProductUpdate(BaseModel):
