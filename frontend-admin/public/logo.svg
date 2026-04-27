@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="95" fill="#F5F0E8" stroke="#1A5C2A" stroke-width="3"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="#1A5C2A" stroke-width="0.8" stroke-dasharray="4 3"/>
+  <text x="72" y="128" font-family="Georgia,serif" font-size="64" font-weight="700" fill="#1A5C2A" text-anchor="middle">Y</text>
+  <text x="130" y="128" font-family="Georgia,serif" font-size="64" font-weight="700" fill="#C49A3C" text-anchor="middle">S</text>
+  <line x1="55" y1="138" x2="145" y2="138" stroke="#1A5C2A" stroke-width="1.5"/>
+  <circle cx="100" cy="138" r="3" fill="#C49A3C"/>
+  <text x="100" y="158" font-family="Georgia,serif" font-size="9" fill="#1A5C2A" text-anchor="middle" letter-spacing="2" font-style="italic">BOUTIQUE</text>
+  <ellipse cx="38" cy="60" rx="10" ry="5" fill="#2E7D32" transform="rotate(-40 38 60)" opacity="0.7"/>
+  <ellipse cx="50" cy="47" rx="9" ry="4" fill="#388E3C" transform="rotate(-55 50 47)" opacity="0.6"/>
+  <ellipse cx="162" cy="60" rx="10" ry="5" fill="#2E7D32" transform="rotate(40 162 60)" opacity="0.7"/>
+  <ellipse cx="150" cy="47" rx="9" ry="4" fill="#388E3C" transform="rotate(55 150 47)" opacity="0.6"/>
+</svg>

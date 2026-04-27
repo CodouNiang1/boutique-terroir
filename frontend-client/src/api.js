@@ -15,3 +15,6 @@ export const createOrder = (order) =>
 
 export const getTopProduits = () =>
   API.get('/orders/stats/top-produits').then(r => r.data)
+
+export const getSuivi = (id) =>
+  API.get(`/orders/suivi/${id}`).then(r => r.data)

@@ -97,7 +97,7 @@ export default function Cart() {
           <h2 style={{ marginBottom: '0.5rem' }}>Commande confirmée !</h2>
           <p style={{ color: 'var(--text-light)', marginBottom: '1.5rem' }}>
             Merci <strong>{success.prenom} {success.client}</strong> !<br />
-            Votre commande <code style={{ background: 'var(--cream)', padding: '2px 8px', borderRadius: '4px' }}>
+            Numéro de suivi : <code style={{ background: 'var(--cream)', padding: '2px 8px', borderRadius: '4px' }}>
               #{success.id.slice(-8).toUpperCase()}
             </code> a été enregistrée.
           </p>
@@ -259,3 +259,4 @@ export default function Cart() {
     </div>
   )
 }
+// Tracking note added via post-processing

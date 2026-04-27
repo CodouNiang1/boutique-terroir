@@ -7,6 +7,13 @@ from models.order import OrderCreate, OrderResponse
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
+SUIVI_INITIAL = [
+    {"statut": "commandee",    "label": "Commande reçue",       "date": None, "fait": True},
+    {"statut": "preparation",  "label": "En préparation",        "date": None, "fait": False},
+    {"statut": "en_route",     "label": "En route",              "date": None, "fait": False},
+    {"statut": "livree",       "label": "Livrée",                "date": None, "fait": False},
+]
+
 
 @router.post("/", response_model=OrderResponse, status_code=201)
 async def create_order(order: OrderCreate):
@@ -25,6 +32,9 @@ async def create_order(order: OrderCreate):
             {"$inc": {"stock": -item.quantite}}
         )
 
+    suivi = SUIVI_INITIAL.copy()
+    suivi[0]["date"] = datetime.utcnow().isoformat()
+
     doc = {
         "client": order.client,
         "prenom": order.prenom,
@@ -32,13 +42,67 @@ async def create_order(order: OrderCreate):
         "region": order.region,
         "paiement": order.paiement,
         "date": datetime.utcnow(),
-        "articles": [a.dict() for a in order.articles],
-        "statut": "confirmée",
+        "articles": [a.model_dump() for a in order.articles],
+        "statut": "commandee",
         "total": round(total, 2),
+        "suivi": suivi,
     }
     result = await orders_collection.insert_one(doc)
     created = await orders_collection.find_one({"_id": result.inserted_id})
     return OrderResponse.from_mongo(created)
+
+
+# ── Mettre à jour le statut de livraison (admin) ─────────────────────────────
+@router.put("/{order_id}/statut")
+async def update_statut(order_id: str, body: dict):
+    nouveau_statut = body.get("statut")
+    statuts_valides = ["commandee", "preparation", "en_route", "livree"]
+    if nouveau_statut not in statuts_valides:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+
+    order = await orders_collection.find_one({"_id": ObjectId(order_id)})
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande introuvable")
+
+    suivi = order.get("suivi", [s.copy() for s in SUIVI_INITIAL])
+    idx_map = {s["statut"]: i for i, s in enumerate(suivi)}
+    nouveau_idx = idx_map.get(nouveau_statut, 0)
+
+    for i, step in enumerate(suivi):
+        if i <= nouveau_idx:
+            step["fait"] = True
+            if not step["date"]:
+                step["date"] = datetime.utcnow().isoformat()
+        else:
+            step["fait"] = False
+            step["date"] = None
+
+    await orders_collection.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"statut": nouveau_statut, "suivi": suivi}}
+    )
+    return {"message": "Statut mis à jour", "statut": nouveau_statut}
+
+
+# ── GET suivi par numéro de commande (client) ─────────────────────────────────
+@router.get("/suivi/{order_id}")
+async def get_suivi(order_id: str):
+    try:
+        doc = await orders_collection.find_one({"_id": ObjectId(order_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID invalide")
+    if not doc:
+        raise HTTPException(status_code=404, detail="Commande introuvable")
+    return {
+        "id": str(doc["_id"]),
+        "client": f"{doc.get('prenom','')} {doc['client']}",
+        "region": doc.get("region", ""),
+        "total": doc["total"],
+        "statut": doc["statut"],
+        "date": doc["date"].isoformat(),
+        "suivi": doc.get("suivi", []),
+        "articles": doc["articles"],
+    }
 
 
 @router.get("/", response_model=List[OrderResponse])

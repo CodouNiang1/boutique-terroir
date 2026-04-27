@@ -6,8 +6,16 @@ from datetime import datetime
 class OrderItem(BaseModel):
     produit_id: str
     nom_produit: str
+    image_url: Optional[str] = ""
     quantite: int
     prix_unitaire: float
+
+
+class DeliveryStep(BaseModel):
+    statut: str
+    label: str
+    date: Optional[datetime] = None
+    fait: bool = False
 
 
 class OrderCreate(BaseModel):
@@ -30,6 +38,7 @@ class OrderResponse(BaseModel):
     articles: List[OrderItem]
     statut: str
     total: float
+    suivi: Optional[List[dict]] = []
 
     @classmethod
     def from_mongo(cls, doc: dict):
@@ -44,4 +53,5 @@ class OrderResponse(BaseModel):
             articles=[OrderItem(**a) for a in doc["articles"]],
             statut=doc["statut"],
             total=doc["total"],
+            suivi=doc.get("suivi", []),
         )

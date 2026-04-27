@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { getOrders, getOrdersByClient } from '../api'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+const STATUTS = [
+  { value: 'commandee',   label: '📋 Reçue',        color: '#22c55e' },
+  { value: 'preparation', label: '📦 Préparation',   color: '#eab308' },
+  { value: 'en_route',    label: '🚚 En route',      color: '#3b82f6' },
+  { value: 'livree',      label: '✅ Livrée',         color: '#16a34a' },
+]
 
 const PAIEMENT_LABELS = {
-  wave: '🌊 Wave',
-  orange_money: '🟠 Orange Money',
-  free_money: '🔵 Free Money',
-  cash: '💵 Livraison',
+  wave: '🌊 Wave', orange_money: '🟠 Orange Money',
+  free_money: '🔵 Free Money', cash: '💵 Livraison',
 }
 
 export default function Orders() {
@@ -13,6 +21,7 @@ export default function Orders() {
   const [clientFilter, setClientFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
+  const [updating, setUpdating] = useState(null)
 
   useEffect(() => { loadOrders() }, [])
 
@@ -27,9 +36,23 @@ export default function Orders() {
     getOrdersByClient(clientFilter).then(setOrders).finally(() => setLoading(false))
   }
 
+  const updateStatut = async (orderId, newStatut) => {
+    setUpdating(orderId)
+    try {
+      await axios.put(`${API_URL}/orders/${orderId}/statut`, { statut: newStatut })
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, statut: newStatut } : o))
+    } catch { alert('Erreur lors de la mise à jour') }
+    finally { setUpdating(null) }
+  }
+
   const formatDate = (d) => new Date(d).toLocaleString('fr-FR', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
+
+  const getStatutStyle = (statut) => {
+    const s = STATUTS.find(x => x.value === statut)
+    return s ? { background: s.color + '22', color: s.color } : {}
+  }
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -38,7 +61,6 @@ export default function Orders() {
         <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>{orders.length} commandes</p>
       </div>
 
-      {/* Filtre client */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <input placeholder="Filtrer par nom client..." value={clientFilter}
           onChange={e => setClientFilter(e.target.value)}
@@ -51,19 +73,11 @@ export default function Orders() {
         )}
       </div>
 
-      {/* Table */}
       <div className="card" style={{ overflow: 'auto' }}>
         <table>
           <thead><tr>
-            <th>Réf.</th>
-            <th>Client</th>
-            <th>Téléphone</th>
-            <th>Région</th>
-            <th>Paiement</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Statut</th>
-            <th>Détails</th>
+            <th>Réf.</th><th>Client</th><th>Téléphone</th><th>Région</th>
+            <th>Paiement</th><th>Date</th><th>Total</th><th>Statut livraison</th><th>Détails</th>
           </tr></thead>
           <tbody>
             {loading ? (
@@ -85,10 +99,21 @@ export default function Orders() {
                     {o.total.toLocaleString('fr-SN')} FCFA
                   </td>
                   <td>
-                    <span style={{
-                      background: 'rgba(34,197,94,0.15)', color: 'var(--green)',
-                      padding: '2px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600,
-                    }}>{o.statut}</span>
+                    <select
+                      value={o.statut || 'commandee'}
+                      disabled={updating === o.id}
+                      onChange={e => updateStatut(o.id, e.target.value)}
+                      style={{
+                        background: 'var(--surface2)', border: '1px solid var(--border)',
+                        borderRadius: '6px', color: 'var(--text)', padding: '4px 8px',
+                        fontSize: '0.8rem', cursor: 'pointer',
+                        ...getStatutStyle(o.statut)
+                      }}
+                    >
+                      {STATUTS.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
                   </td>
                   <td>
                     <button className="btn" style={{ background: 'var(--surface2)', color: 'var(--text)', padding: '4px 10px' }}
